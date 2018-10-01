@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaflet Control Geocoder</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no initial-scale=1, maximum-scale=1">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@latest/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@latest/dist/leaflet-src.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+        #map {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script type="text/javascript">
+        var map = L.map('map').setView([42.692541, 23.319915], 9),
+            geocoder = L.Control.Geocoder.nominatim(),
+            control = L.Control.geocoder({
+                geocoder: geocoder
+            }).addTo(map),
+            marker;
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+
+
+        var metrostations = $.ajax({
+            url: "railway-station-point.geojson",
+            dataType: "json",
+            success: console.log("County data successfully loaded."),
+            error: function(xhr) {
+                alert(xhr.statusText)
+            }
+        })
+
+        var schools = $.ajax({
+            url: "schools-sofia.geojson",
+            dataType: "json",
+            success: console.log("School data successfully loaded."),
+            error: function(xhr) {
+                alert(xhr.statusText)
+            }
+        })
+
+        var kindergartens = $.ajax({
+            url: "kindergartens-sofia.geojson",
+            dataType: "json",
+            success: console.log("Kindergartens data successfully loaded."),
+            error: function(xhr) {
+                alert(xhr.statusText)
+            }
+        })
+
+        var highways = $.ajax({
+            url: "highways-bg.geojson",
+            dataType: "json",
+            success: console.log("Highways data successfully loaded."),
+            error: function(xhr) {
+                alert(xhr.statusText)
+            }
+        })
+
+        var mcg = L.markerClusterGroup({
+          chunkedLoading: true,
+          //singleMarkerMode: true,
+          spiderfyOnMaxZoom: false
+        });
+
+        var isCluster;
+        function onEachFeature(feature, layer) {
+            // does this feature have a property named popupContent?
+            // if (feature.properties && feature.properties.AMENITY && map.getBounds().contains(feature.geometry.coordinates)) {
+            //     layer.bindPopup(feature.properties.AMENITY);
+            // }
+
+            var coords = feature.geometry.coordinates;
+            if (feature.properties && feature.geometry) {
+                if (feature.geometry.type == 'Point') {
+                    var popupcontent = [];
+                    for (var prop in feature.properties) {
+                        if (prop == 'name' || prop == 'website') {
+                            popupcontent.push(feature.properties[prop]);
+                        }
+                    }
+                    // if (feature.properties.name) {
+                    layer.bindTooltip(popupcontent.join("<br />"));
+
+                    // var marker = L.marker(new L.LatLng(coords[1], coords[0]), { title: feature.properties.name });
+                    // marker.bindPopup(feature.properties.name);
+                    // mcg.addLayer(marker);
+                    // isCluster = true;
+                    // }
+                } else if (feature.geometry.type == 'Polygon') {
+                    var popupcontent = [];
+                    for (var prop in feature.properties) {
+                        if (prop == 'name' || prop == 'website') {
+                            popupcontent.push(feature.properties[prop]);
+                        }
+                    }
+                    // if (feature.properties.name) {
+                    layer.bindTooltip(popupcontent.join("<br />"));                        // if (coords[0]) {
+                        //     var marker = L.marker(new L.LatLng(coords[0][1], coords[0][0]), { title: feature.properties.name });
+                        // }
+                        // layer.setStyle({
+                        //     color: 'red'   //or whatever style you wish to use;
+                        // });
+                        // layer.bindTooltip(feature.properties.name);
+                    // }
+                   
+                } else if (feature.geometry.type == 'LineString' && feature.properties.bridge) {
+                    // var coordsLength = Object.keys(coords).length;
+                    // var coordsMid;
+                    // if (coordsLength > 0) {
+                    //     coordsMid = Math.floor(coordsLength / 2);
+                    // } else {
+                    //     coordsMid = coordsLength;
+                    // }
+                    // var marker = L.marker(new L.LatLng(coords[coordsMid][1], coords[coordsMid][0]), { title: feature.properties.name });
+                    // marker.bindPopup(feature.properties.name);
+                    // mcg.addLayer(marker);
+                    // isCluster = true;
+                    // console.log("LineString")
+                }
+            }
+        }
+
+        var overlayMaps = {};
+        // $.when(metrostations).done(function() {
+        //     // Add requested external GeoJSON to map
+        //     // mcg.clearLayers();
+        //     var layerGroup = L.geoJSON(metrostations.responseJSON, {
+        //       onEachFeature: onEachFeature
+
+        //         // layer.on('mouseover', function() {
+        //         //     this.setStyle({
+        //         //         color: 'red'   //or whatever style you wish to use;
+        //         //     });
+        //         // });
+        //         // layer.on('mouseout', function() {
+        //         //     this.setStyle({
+        //         //         color: 'blue'   //or whatever style you wish to use;
+        //         //     });
+        //         // });
+        //       // }
+        //     })
+
+        //     var overlayStations = {
+        //         "Stations": mcg
+        //     }
+
+        //     Object.assign(overlayMaps, overlayStations);
+
+        //     // if (isCluster) {
+        //     //     map.addLayer(mcg);
+        //     // } else {
+        //     //     layerGroup.addTo(map);
+        //     // }
+
+        //     console.log(overlayMaps);
+            
+        // });
+
+
+        var schoolLayer;
+        $.when(schools).done(function() {
+            // Add requested external GeoJSON to map
+            schoolLayer = L.geoJSON(schools.responseJSON, {
+              onEachFeature: onEachFeature
+            })
+            
+            var overlaySchools = {
+                "Schools": schoolLayer
+            }
+
+            Object.assign(overlayMaps, overlaySchools);
+
+            console.log(overlayMaps);
+
+            L.control.layers(null, overlayMaps).addTo(map);
+            
+        });
+
+        var kindergartensLayer;
+        $.when(kindergartens).done(function() {
+            // Add requested external GeoJSON to map
+
+
+            kindergartensLayer = L.geoJSON(kindergartens.responseJSON, {
+              onEachFeature: onEachFeature
+            })
+
+                                            kindergartensLayer.setStyle({
+                        color: 'red'   //or whatever style you wish to use;
+                    });
+            
+            var overlayKindergartens = {
+                "Kindergartens": kindergartensLayer
+            }
+
+            Object.assign(overlayMaps, overlayKindergartens);
+
+            console.log(overlayMaps);
+
+            // L.control.layers(null, overlayMaps).addTo(map);
+            
+        });
+
+        // var highwayOverlayMaps = {};
+        // $.when(highways).done(function() {
+        //     // mcg.clearLayers();
+        //     // Add requested external GeoJSON to map
+        //     var layerGroup = L.geoJSON(highways.responseJSON, {
+        //       onEachFeature: onEachFeature
+        //     })
+
+        //                 console.log("Highways done");
+
+
+        //     var viaducts = {
+        //         "Viaducts": mcg
+        //     }
+
+        //     console.log("OverlayMaps");
+        //     Object.assign(overlayMaps, viaducts);
+
+        //     console.log(overlayMaps);
+
+        //                 L.control.layers(null, overlayMaps).addTo(map);
+
+            
+        // });
+
+        // $.when(schools).done(function() {
+        //     // mcg.clearLayers();
+        //     // Add requested external GeoJSON to map
+        //     var layerGroup = L.geoJSON(schools.responseJSON, {
+        //       onEachFeature: onEachFeature
+        //     })
+
+        //     var schoolsLayer = {
+        //         "Schools": mcg
+        //     }
+
+        //     Object.assign(overlayMaps, schoolsLayer);
+
+        //     console.log(overlayMaps);
+
+        //                 L.control.layers(null, overlayMaps).addTo(map);
+
+            
+        // });
+
+
+    </script>
+</body>
+</html>
