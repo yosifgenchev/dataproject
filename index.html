@@ -1,10 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Leaflet Control Geocoder</title>
-
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no initial-scale=1, maximum-scale=1">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+<head> 
+<title></title> 
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@latest/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@latest/dist/leaflet-src.js"></script>
@@ -13,28 +12,67 @@
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
         <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
 
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
-    <style type="text/css">
-        body {
-            margin: 0;
-        }
+<style type="text/css">
+	
+.leaflet-popup-content {
+	font-size: 14px;
+	white-space: pre;
+}
+
+.geojson-list-item {
+	white-space: nowrap;
+	font-size: 14px;
+}
+
+#geofilter {
+	margin: 0 20px;
+	font-size: 16px;
+	border: 2px solid #1978cf;
+	box-shadow: 0 0 8px #999;
+}
+#geofilter option {
+	padding: 4px;
+}
+
         #map {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            width: 80%;
+            height: 80%;
         }
-    </style>
-</head>
-<body>
-    <div id="map"></div>
 
-    <script type="text/javascript">
+</style>
+</head>
+
+<body>
+<h3><a href="../"><big>◄</big> Leaflet GeoJSON Selector</a></h3>
+
+<h4>Overpass API Example: load buildings in area</h4>
+<select id="geofilter" size="3" multiple>
+    <option value="data=[out:json];node[amenity=school](42.359657,23.363866,42.678657,23.665866);(._;>;);out;">buildings</option>
+    <option value="data=[out:json];way[natural=wood](41.878660,12.562383,41.883125,12.571663);(._;>;);out;" selected>woods</option>
+    <option value="data=[out:json];node[amenity=school](41.878660,12.562383,41.883125,12.571663);(._;>;);out;" selected>bars</option>
+    </select>
+
+<pre id="selection">&nbsp;</pre>
+<div id="map"></div>
+
+
+
+<script src="osmtogeojson.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-geojson-selector@0.5.4/dist/leaflet-geojson-selector.src.min.js"></script>
+<link rel="stylesheet" href="http://code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css">
+<link href="https://fastcdn.org/Leaflet.awesome-markers/2.0.1/leaflet.awesome-markers.css" rel="stylesheet">
+
+<script src="https://fastcdn.org/Leaflet.awesome-markers/2.0.1/leaflet.awesome-markers.min.js"></script>
+
+<script>
+
         var map = L.map('map').setView([42.692541, 23.319915], 9),
             geocoder = L.Control.Geocoder.nominatim(),
             control = L.Control.geocoder({
@@ -45,235 +83,97 @@
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
+	// map.addControl(L.control.zoom({position:'topright'}));
 
+	var geoLayer = L.geoJson().addTo(map);
+    var marker;
+	
+	// var geoList = L.control.geoJsonSelector(geoLayer, {
+	// 	listItemBuild: function(layer) {
+	// 		var props = layer.feature.properties,
+	// 			tags = props.tags,
+	// 			html = 'ID: '+props.id+'<br>';
+			
+	// 		for(var p in tags)
+	// 			html += p+': '+tags[p]+'<br>';
 
-        // var metrostations = $.ajax({
-        //     url: "railway-station-point.geojson",
-        //     dataType: "json",
-        //     success: console.log("County data successfully loaded."),
-        //     error: function(xhr) {
-        //         alert(xhr.statusText)
-        //     }
-        // })
+	// 		return html;
+	// 	}
+	// }).addTo(map);
 
-        var schools = $.ajax({
-            url: "schools-sofia.geojson",
-            dataType: "json",
-            success: console.log("School data successfully loaded."),
-            error: function(xhr) {
-                alert(xhr.statusText)
-            }
-        })
+	// geoList.on('selector:change', function(e) {
 
-        var kindergartens = $.ajax({
-            url: "kindergartens-sofia.geojson",
-            dataType: "json",
-            success: console.log("Kindergartens data successfully loaded."),
-            error: function(xhr) {
-                alert(xhr.statusText)
-            }
-        })
+	// 	var jsonObj = $.parseJSON( JSON.stringify(e.layers[0].feature.properties) );
+	// 	var html = 'Selection:<br /><table border="1">';
+	// 	$.each(jsonObj, function(key, value){
+	// 			html += '<tr>';
+	// 			html += '<td>' + key.replace(":", " ") + '</td>';
+	// 			html += '<td>' + value + '</td>';
+	// 			html += '</tr>';
+	// 	});
+	// 	html += '</table>';
 
-        var highways = $.ajax({
-            url: "highways-bg.geojson",
-            dataType: "json",
-            success: console.log("Highways data successfully loaded."),
-            error: function(xhr) {
-                alert(xhr.statusText)
-            }
-        })
+	// 	$('.selection').html(html);
+	// });
+	
+	map.addControl(function() {
+		var c = new L.Control({position:'bottomright'});
+		c.onAdd = function(map) {
+				return L.DomUtil.create('pre','selection');
+			};
+		return c;
+	}());
+	
+	// $('#geofilter').on('change', function(e) {
 
-        var mcg = L.markerClusterGroup({
-          chunkedLoading: true,
-          //singleMarkerMode: true,
-          spiderfyOnMaxZoom: false
-        });
-
-        var isCluster;
-        function onEachFeature(feature, layer) {
-            // does this feature have a property named popupContent?
-            // if (feature.properties && feature.properties.AMENITY && map.getBounds().contains(feature.geometry.coordinates)) {
-            //     layer.bindPopup(feature.properties.AMENITY);
-            // }
-
-            var coords = feature.geometry.coordinates;
-            if (feature.properties && feature.geometry) {
-                if (feature.geometry.type == 'Point') {
-                    var popupcontent = [];
-                    for (var prop in feature.properties) {
-                        if (prop == 'name' || prop == 'website') {
-                            popupcontent.push(feature.properties[prop]);
-                        }
-                    }
-                    // if (feature.properties.name) {
-                    layer.bindTooltip(popupcontent.join("<br />"));
-
-                    // var marker = L.marker(new L.LatLng(coords[1], coords[0]), { title: feature.properties.name });
-                    // marker.bindPopup(feature.properties.name);
-                    // mcg.addLayer(marker);
-                    // isCluster = true;
-                    // }
-                } else if (feature.geometry.type == 'Polygon') {
-                    var popupcontent = [];
-                    for (var prop in feature.properties) {
-                        if (prop == 'name' || prop == 'website') {
-                            popupcontent.push(feature.properties[prop]);
-                        }
-                    }
-                    // if (feature.properties.name) {
-                    layer.bindTooltip(popupcontent.join("<br />"));                        // if (coords[0]) {
-                        //     var marker = L.marker(new L.LatLng(coords[0][1], coords[0][0]), { title: feature.properties.name });
-                        // }
-                        // layer.setStyle({
-                        //     color: 'red'   //or whatever style you wish to use;
-                        // });
-                        // layer.bindTooltip(feature.properties.name);
-                    // }
-                   
-                } else if (feature.geometry.type == 'LineString' && feature.properties.bridge) {
-                    // var coordsLength = Object.keys(coords).length;
-                    // var coordsMid;
-                    // if (coordsLength > 0) {
-                    //     coordsMid = Math.floor(coordsLength / 2);
-                    // } else {
-                    //     coordsMid = coordsLength;
-                    // }
-                    // var marker = L.marker(new L.LatLng(coords[coordsMid][1], coords[coordsMid][0]), { title: feature.properties.name });
-                    // marker.bindPopup(feature.properties.name);
-                    // mcg.addLayer(marker);
-                    // isCluster = true;
-                    // console.log("LineString")
+            function mapMoveEnd(e) {
+                if(marker) {
+                    map.removeLayer(marker);
                 }
+        var bounds = map.getCenter();
+        var around = 1000;
+        map.off('dragend', mapMoveEnd);
+        map.panTo(bounds, { duration: .25 }); // seconds
+        setTimeout(function(){ map.on('dragend', mapMoveEnd); }, 300); // milliseconds
+
+        console.log(`${bounds.lat}`);
+        var query = `data=[out:json][timeout:25];(node[amenity=school](around:${around},${bounds.lat},${bounds.lng});way[amenity=school](around:${around},${bounds.lat},${bounds.lng});relation[amenity=school](around:${around},${bounds.lat},${bounds.lng});node[leisure=park](around:${around},${bounds.lat},${bounds.lng});way[leisure=park](around:${around},${bounds.lat},${bounds.lng});relation[leisure=park](around:${around},${bounds.lat},${bounds.lng});node[amenity=kindergarten](around:${around},${bounds.lat},${bounds.lng});way[amenity=kindergarten](around:${around},${bounds.lat},${bounds.lng});relation[amenity=kindergarten](around:${around},${bounds.lat},${bounds.lng});node[station=subway](around:${around},${bounds.lat},${bounds.lng});way[station=subway](around:${around},${bounds.lat},${bounds.lng});relation[station=subway](around:${around},${bounds.lat},${bounds.lng}););out body;>;out skel qt;`
+        console.log(query);
+        $.ajax({
+            data: query,
+            type: 'post',
+            dataType: 'json',
+            url: 'http://overpass-api.de/api/interpreter',
+            success: function(json) {
+
+                map.removeLayer(geoLayer);
+
+                var geojson = osmtogeojson(json);
+
+                geoLayer = L.geoJson(geojson).addTo(map);
+
+                map.fitBounds( geoLayer.getBounds() );
+
+                // geoList.reload( geoLayer );
+
+                marker = L.marker([bounds.lat,bounds.lng], {icon: L.AwesomeMarkers.icon({icon: 'coffee', markerColor: 'red', prefix: 'fa', spin:true}) }).addTo(map);
+
             }
-        }
-
-        var overlayMaps = {};
-        // $.when(metrostations).done(function() {
-        //     // Add requested external GeoJSON to map
-        //     // mcg.clearLayers();
-        //     var layerGroup = L.geoJSON(metrostations.responseJSON, {
-        //       onEachFeature: onEachFeature
-
-        //         // layer.on('mouseover', function() {
-        //         //     this.setStyle({
-        //         //         color: 'red'   //or whatever style you wish to use;
-        //         //     });
-        //         // });
-        //         // layer.on('mouseout', function() {
-        //         //     this.setStyle({
-        //         //         color: 'blue'   //or whatever style you wish to use;
-        //         //     });
-        //         // });
-        //       // }
-        //     })
-
-        //     var overlayStations = {
-        //         "Stations": mcg
-        //     }
-
-        //     Object.assign(overlayMaps, overlayStations);
-
-        //     // if (isCluster) {
-        //     //     map.addLayer(mcg);
-        //     // } else {
-        //     //     layerGroup.addTo(map);
-        //     // }
-
-        //     console.log(overlayMaps);
-            
-        // });
-
-
-        var schoolLayer;
-        $.when(schools).done(function() {
-            // Add requested external GeoJSON to map
-            schoolLayer = L.geoJSON(schools.responseJSON, {
-              onEachFeature: onEachFeature
-            })
-            
-            var overlaySchools = {
-                "Schools": schoolLayer
-            }
-
-            Object.assign(overlayMaps, overlaySchools);
-
-            console.log(overlayMaps);
-
-            L.control.layers(null, overlayMaps).addTo(map);
-            
         });
-
-        var kindergartensLayer;
-        $.when(kindergartens).done(function() {
-            // Add requested external GeoJSON to map
+    }
+    map.on('dragend', mapMoveEnd);
 
 
-            kindergartensLayer = L.geoJSON(kindergartens.responseJSON, {
-              onEachFeature: onEachFeature
-            })
 
-                                            kindergartensLayer.setStyle({
-                        color: 'red'   //or whatever style you wish to use;
-                    });
-            
-            var overlayKindergartens = {
-                "Kindergartens": kindergartensLayer
-            }
+        map.on('zoomend', function() {
+        // callback
+    });
 
-            Object.assign(overlayMaps, overlayKindergartens);
+    // map.on('dragend', function() {
+    //     // callback
+    // });
 
-            console.log(overlayMaps);
-
-            // L.control.layers(null, overlayMaps).addTo(map);
-            
-        });
-
-        // var highwayOverlayMaps = {};
-        // $.when(highways).done(function() {
-        //     // mcg.clearLayers();
-        //     // Add requested external GeoJSON to map
-        //     var layerGroup = L.geoJSON(highways.responseJSON, {
-        //       onEachFeature: onEachFeature
-        //     })
-
-        //                 console.log("Highways done");
-
-
-        //     var viaducts = {
-        //         "Viaducts": mcg
-        //     }
-
-        //     console.log("OverlayMaps");
-        //     Object.assign(overlayMaps, viaducts);
-
-        //     console.log(overlayMaps);
-
-        //                 L.control.layers(null, overlayMaps).addTo(map);
-
-            
-        // });
-
-        // $.when(schools).done(function() {
-        //     // mcg.clearLayers();
-        //     // Add requested external GeoJSON to map
-        //     var layerGroup = L.geoJSON(schools.responseJSON, {
-        //       onEachFeature: onEachFeature
-        //     })
-
-        //     var schoolsLayer = {
-        //         "Schools": mcg
-        //     }
-
-        //     Object.assign(overlayMaps, schoolsLayer);
-
-        //     console.log(overlayMaps);
-
-        //                 L.control.layers(null, overlayMaps).addTo(map);
-
-            
-        // });
-
-
-    </script>
+</script>
+	
 </body>
 </html>
